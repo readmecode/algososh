@@ -1,0 +1,32 @@
+.circlesBox {
+  display: flex;
+  column-gap: 16px;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  align-items: center;
+}
+
+.inputContainer {
+  max-width: 522px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.input {
+  max-width: 377px;
+  width: 100%;
+}
+
+.button {
+  display: flex;
+  width: 133px;
+}

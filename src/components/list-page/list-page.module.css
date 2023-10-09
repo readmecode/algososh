@@ -1,0 +1,75 @@
+.section {
+  display: flex;
+  column-gap: 12px;
+  margin-bottom: 12px;
+}
+
+.input {
+  max-width: 204px;
+  width: 100%;
+}
+
+.mainContainer {
+  max-width: 952px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  row-gap: 37px;
+}
+
+.button {
+  max-width: 175px;
+  display: flex;
+  width: 100%;
+}
+
+.circlesBox {
+  display: flex;
+  column-gap: 16px;
+  max-width: 944px;
+  width: 100%;
+  list-style-type: none;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.circleCont {
+  display: grid;
+  grid-template-columns: 80px 24px;
+  grid-template-rows: 56px 80px 56px;
+  row-gap: 8px;
+  column-gap: 16px;
+  align-items: center;
+  justify-items: center;
+}
+
+.arrow {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  grid-column-start: 2;
+  grid-column-end: 3;
+}
+
+.smallCircleTop {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 2;
+}
+
+.smallCircleBottom {
+  padding-top: 60px;
+  grid-row-start: 3;
+  grid-row-end: 4;
+  grid-column-start: 1;
+  grid-column-end: 2;
+}
+
+.bigCircle {
+  grid-row-start: 2;
+  grid-row-end: 3;
+  grid-column-start: 1;
+  grid-column-end: 2;
+}

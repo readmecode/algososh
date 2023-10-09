@@ -1,11 +1,5 @@
-import React from "react";
 import { SolutionLayout } from "../ui/solution-layout/solution-layout";
-
-export const FibonacciPage: React.FC = () => {
-  return <SolutionLayout title="Последовательность Фибоначчи"></SolutionLayout>;
-};
 import React, { ChangeEvent, useState } from "react";
-import { SolutionLayout } from "../ui/solution-layout/solution-layout";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
 import fibonacciPageStyles from "./fibonacci-page.module.css";
