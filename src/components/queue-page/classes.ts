@@ -21,6 +21,7 @@ export class Queue<T> implements IQueue<T> {
   constructor(size: number) {
     this.size = size;
     this.container = Array(size);
+    this.length = 0;
   }
 
   enqueue = (item: T) => {
@@ -44,10 +45,13 @@ export class Queue<T> implements IQueue<T> {
       throw new Error("No elements in the queue");
     }
 
-    if (this.length < this.size) {
-      this.container[this.head % this.size] = null;
-      this.head++;
-      this.length--;
+    this.container[this.head % this.size] = null;
+    this.head = (this.head + 1) % this.size;
+    this.length--;
+
+    if (this.isEmpty()) {
+      this.head = 0;
+      this.tail = 0;
     }
   };
 

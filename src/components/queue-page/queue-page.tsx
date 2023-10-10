@@ -34,6 +34,12 @@ export const QueuePage: React.FC = () => {
   const handeAddButton = async () => {
     if (inputValue) {
       setInputValue("");
+      console.log(
+        "Before enqueue: tail=",
+        queue.getTail(),
+        "length=",
+        queue.getSize()
+      );
       queue.enqueue({ value: inputValue, color: ElementStates.Default });
       setQueue(queue);
       queueArr[queue.getTail() - 1] = {
@@ -58,22 +64,27 @@ export const QueuePage: React.FC = () => {
   const handeDeleteButton = async () => {
     setDisableButtons(true);
     queue.dequeue();
-    setQueue(queue);
-    queueArr[queue.getHead() - 1] = {
-      value: queueArr[queue.getHead() - 1].value,
+    const headIndex = queue.getHead() === 0 ? 0 : queue.getHead() - 1;
+
+    const updatedQueueArr = [...queueArr];
+    updatedQueueArr[headIndex] = {
+      value: updatedQueueArr[headIndex].value,
       color: ElementStates.Changing,
     };
-    setQueueArr([...queueArr]);
+    setQueueArr(updatedQueueArr);
+
     await delay(SHORT_DELAY_IN_MS);
-    queueArr[queue.getHead() - 1] = { value: "", color: ElementStates.Default };
-    setQueueArr([...queueArr]);
+
+    updatedQueueArr[headIndex] = { value: "", color: ElementStates.Default };
+    setQueueArr(updatedQueueArr);
+
     if (queue.getHead() === 7 && queue.getTail() === 7 && queue.isEmpty()) {
-      queueArr[queue.getHead() - 1] = {
+      updatedQueueArr[headIndex] = {
         value: "",
         color: ElementStates.Default,
         head: "head",
       };
-      setQueueArr([...queueArr]);
+      setQueueArr(updatedQueueArr);
     }
     setDisableButtons(false);
   };

@@ -170,6 +170,11 @@ export const ListPage: React.FC = () => {
     setButtonName("");
   };
 
+  const isValidIndex = (index: string): boolean => {
+    const numIndex = Number(index);
+    return numIndex >= 0 && numIndex < list.listLength;
+  };
+
   const deleteByIndex = async () => {
     if (Number(ind) < list.listLength && Number(ind) < 7) {
       setButtonName(ButtonName.DeleteByIndex);
@@ -288,13 +293,20 @@ export const ListPage: React.FC = () => {
               text="Добавить по индексу"
               onClick={addByIndex}
               isLoader={buttonName === ButtonName.AddByIndex && loading}
-              disabled={!inputValue || !ind || loading ? true : false}
+              disabled={
+                !inputValue || !ind || loading || !isValidIndex(ind)
+                  ? true
+                  : false
+              }
             />
+
             <Button
               text="Удалить по индексу"
               onClick={deleteByIndex}
               isLoader={buttonName === ButtonName.DeleteByIndex && loading}
-              disabled={ind === "" || loading ? true : false}
+              disabled={
+                ind === "" || loading || !isValidIndex(ind) ? true : false
+              }
             />
           </section>
         </div>
