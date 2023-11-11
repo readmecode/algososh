@@ -1,23 +1,11 @@
-import React, { ChangeEvent, useState } from "react";
+import style from "./string.module.css";
+import React, { useState } from "react";
 import { SolutionLayout } from "../ui/solution-layout/solution-layout";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
-import stringStyles from "./string.module.css";
 import { Circle } from "../ui/circle/circle";
 import { ElementStates } from "../../types/element-states";
-import { DELAY_IN_MS } from "../../constants/delays";
-import { delay } from "../../utils/utils";
-
-export const swap = (
-  arr: TArray[],
-  firstIndex: number,
-  secondIndex: number
-) => {
-  const temp = arr[firstIndex];
-  arr[firstIndex] = arr[secondIndex];
-  arr[secondIndex] = temp;
-  return arr;
-};
+import { convertString } from "./utils";
 
 type TArray = {
   value: string;
@@ -25,72 +13,44 @@ type TArray = {
 };
 
 export const StringComponent: React.FC = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [stringArr, setStringArr] = useState<Array<TArray>>([]);
+  const [input, setInput] = useState("");
+  const [stringArr, setString] = useState<Array<TArray>>([]);
   const [loader, setLoader] = useState(false);
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.currentTarget.value);
+  const onChangeInput = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(evt.target.value);
   };
 
-  const reverse = async (arr: TArray[]) => {
-    setLoader(true);
-    const mid = Math.ceil(arr.length / 2);
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    for (let i = 0; i < mid; i++) {
-      let j = arr.length - 1 - i;
-
-      if (i !== j) {
-        arr[i].color = ElementStates.Changing;
-        arr[j].color = ElementStates.Changing;
-        setStringArr([...arr]);
-        await delay(DELAY_IN_MS);
-      }
-
-      swap(arr, i, j);
-
-      arr[i].color = ElementStates.Modified;
-      arr[j].color = ElementStates.Modified;
-
-      setStringArr([...arr]);
-    }
-    setLoader(false);
-  };
-
-  const handleButton = () => {
-    const newArr = inputValue
-      .split("")
-      .map((value) => ({ value, color: ElementStates.Default }));
-    reverse(newArr);
+    convertString(input, setLoader, setString);
   };
 
   return (
     <SolutionLayout title="Строка">
-      <div className={stringStyles.mainContainer}>
-        <div className={stringStyles.inputContainer}>
+      <div>
+        <form className={style.form} onSubmit={submit}>
           <Input
-            isLimitText={true}
             maxLength={11}
-            value={inputValue}
-            onChange={onChange}
+            isLimitText={true}
+            value={input}
+            onChange={onChangeInput}
           />
-          <div className={stringStyles.button}>
-            <Button
-              text="Развернуть"
-              onClick={handleButton}
-              isLoader={loader}
-              disabled={inputValue === ""}
-            />
-          </div>
+          <Button
+            type="submit"
+            text="Развернуть"
+            isLoader={loader}
+            disabled={!input.length}
+          />
+        </form>
+        <div className={style.letterList}>
+          {stringArr?.map((item, index) => (
+            <li key={index}>
+              <Circle letter={item.value} state={item.color} />
+            </li>
+          ))}
         </div>
-        <ul className={stringStyles.circlesBox}>
-          {stringArr &&
-            stringArr.map((item, index) => (
-              <li key={index}>
-                <Circle letter={item.value} state={item.color} />
-              </li>
-            ))}
-        </ul>
       </div>
     </SolutionLayout>
   );

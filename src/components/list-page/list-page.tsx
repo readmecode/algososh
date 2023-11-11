@@ -1,360 +1,383 @@
-import React, { ChangeEvent, useMemo, useState } from "react";
-import { SolutionLayout } from "../ui/solution-layout/solution-layout";
+import style from "./list-page.module.css";
+import React, { useState, ChangeEvent } from "react";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
-import listPageStyles from "./list-page.module.css";
 import { Circle } from "../ui/circle/circle";
 import { ArrowIcon } from "../ui/icons/arrow-icon";
-import { LinkedList } from "./classes";
-import { getRandomInt } from "../sorting-page/sorting-page.utils";
-import { SHORT_DELAY_IN_MS } from "../../constants/delays";
 import { ElementStates } from "../../types/element-states";
-import { delay } from "../../utils/utils";
+import { SHORT_DELAY_IN_MS } from "../../constants/delays";
+import { SolutionLayout } from "../ui/solution-layout/solution-layout";
+import { LinkedList } from "./list";
 
-type TItem = {
-  value: string;
-  color: ElementStates;
+type TLoader = {
+  insertInBegin: boolean;
+  insertAtEnd: boolean;
+  appendByIndex: boolean;
+  removeHead: boolean;
+  removeTail: boolean;
+  removeFrom: boolean;
 };
 
-enum ButtonName {
-  AddToHead = "add to head",
-  AddToTail = "add to tail",
-  DeleteFromTheHead = "delete from the head",
-  DeleteFromTheTail = "delete from to tail",
-  AddByIndex = "add by index",
-  DeleteByIndex = "delete by index",
-}
+type TShiftElement = {
+  value: string;
+  state: ElementStates;
+  position: "addAction" | "removeAction";
+};
+
+type TListArr = {
+  value: string;
+  state: ElementStates;
+  shiftElement: TShiftElement | null;
+};
 
 export const ListPage: React.FC = () => {
+  const initialArray = ["0", "34", "8", "1"];
+  const MAXINDEX: number = 7;
+
+  const list = new LinkedList<string>(initialArray);
+
+  const listArr: TListArr[] = initialArray.map((item) => ({
+    value: item,
+    state: ElementStates.Default,
+    shiftElement: null,
+  }));
+
   const [inputValue, setInputValue] = useState("");
-  const [ind, setInd] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [addToHeadOperation, setAddToHeadOperation] = useState(false);
-  const [addToTailOperation, setAddToTailOperation] = useState(false);
-  const [deleteFromTheHeadOperation, setDeleteFromTheHeadOperation] =
-    useState(false);
-  const [deleteFromTheTailOperation, setDeleteFromTheTailOperation] =
-    useState(false);
-  const [addByIndexOperation, setAddByIndexOperation] = useState(false);
-  const [deleteByIndexOperation, setDeleteByIndexOperation] = useState(false);
-  const [inputValueInd, setInputValueInd] = useState<number>();
-  const [buttonName, setButtonName] = useState("");
-  const [circleTempValue, setCircleTempValue] = useState("");
+  const [inputIndex, setInputIndex] = useState("");
+  const [disabled, setDisabled] = useState(false);
+  const [listArray, setListArray] = useState<TListArr[]>(listArr);
+  const [isLoader, setIsLoader] = useState<TLoader>({
+    insertInBegin: false,
+    insertAtEnd: false,
+    appendByIndex: false,
+    removeHead: false,
+    removeTail: false,
+    removeFrom: false,
+  });
 
-  const list = useMemo(
-    () =>
-      new LinkedList<string>(
-        Array.from({ length: 4 }, () => getRandomInt(0, 99).toString())
-      ),
-    []
-  );
-
-  const [arr, setArr] = useState<TItem[]>(list.getArrWithColor());
-
-  const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onChangeValue = (e: ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
-  const onIndChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInd(e.target.value);
+  const onChangeIndex = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputIndex(e.target.value);
   };
 
-  const addIntoHead = async () => {
-    if (inputValue && list.listLength < 6) {
-      setButtonName(ButtonName.AddToHead);
-      setLoading(true);
-      setInputValueInd(0);
-      setAddToHeadOperation(true);
-      await delay(SHORT_DELAY_IN_MS);
-      list.prepend(inputValue);
-      setAddToHeadOperation(false);
-      const newArr = list.getArrWithColor();
-      newArr[0].color = ElementStates.Modified;
-      setArr(newArr);
-      await delay(SHORT_DELAY_IN_MS);
-      newArr[0].color = ElementStates.Default;
-      setArr(newArr);
+  const handleClickAddHead = async () => {
+    setIsLoader({ ...isLoader, insertInBegin: true });
+    setDisabled(true);
+    list.prepend(inputValue);
+    if (listArray.length > 0) {
+      listArray[0].shiftElement = {
+        value: inputValue,
+        state: ElementStates.Changing,
+        position: "addAction",
+      };
     }
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray[0].shiftElement = null;
+    listArray.unshift({
+      ...listArray[0],
+      value: inputValue,
+      state: ElementStates.Modified,
+    });
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray[0].state = ElementStates.Default;
+    setListArray([...listArray]);
+    setIsLoader({ ...isLoader, insertInBegin: false });
+    setDisabled(false);
     setInputValue("");
-    setLoading(false);
-    setButtonName("");
   };
 
-  const addIntoTail = async () => {
-    if (inputValue && list.listLength < 6) {
-      setButtonName(ButtonName.AddToTail);
-      setLoading(true);
-      setInputValueInd(list.listLength - 1);
-      setAddToTailOperation(true);
-      await delay(SHORT_DELAY_IN_MS);
-      list.append(inputValue);
-      setAddToTailOperation(false);
-      const newArr = list.getArrWithColor();
-      newArr[newArr.length - 1].color = ElementStates.Modified;
-      setArr(newArr);
-      await delay(SHORT_DELAY_IN_MS);
-      newArr[newArr.length - 1].color = ElementStates.Default;
-      setArr(newArr);
-    }
+  const handleClickAddTail = async () => {
+    setIsLoader({ ...isLoader, insertAtEnd: true });
+    setDisabled(true);
     setInputValue("");
-    setLoading(false);
-    setButtonName("");
+    list.append(inputValue);
+    listArray[listArray.length - 1] = {
+      ...listArray[listArray.length - 1],
+      shiftElement: {
+        value: inputValue,
+        state: ElementStates.Changing,
+        position: "addAction",
+      },
+    };
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray[listArray.length - 1] = {
+      ...listArray[listArray.length - 1],
+      shiftElement: null,
+    };
+
+    listArray.push({
+      value: inputValue,
+      state: ElementStates.Modified,
+      shiftElement: null,
+    });
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray[listArray.length - 1].state = ElementStates.Default;
+    setListArray([...listArray]);
+    setIsLoader({ ...isLoader, insertAtEnd: false });
+    setDisabled(false);
   };
 
-  const deleteFromTheHead = async () => {
-    if (list.listLength > 0) {
-      const newArr = list.getArrWithColor();
-      setCircleTempValue(newArr[0].value);
-      setButtonName(ButtonName.DeleteFromTheHead);
-      setLoading(true);
-      setDeleteFromTheHeadOperation(true);
-      setInputValueInd(0);
-      newArr[0].value = "";
-      setArr(newArr);
-      await delay(SHORT_DELAY_IN_MS);
-      list.deleteHead();
-      setDeleteFromTheHeadOperation(false);
-      setArr(list.getArrWithColor());
-    }
-    setLoading(false);
-    setButtonName("");
-  };
-
-  const deleteFromTheTail = async () => {
-    if (list.listLength > 0) {
-      const newArr = list.getArrWithColor();
-      setCircleTempValue(newArr[newArr.length - 1].value);
-      setButtonName(ButtonName.DeleteFromTheTail);
-      setLoading(true);
-      setDeleteFromTheTailOperation(true);
-      setInputValueInd(list.listLength - 1);
-      newArr[newArr.length - 1].value = "";
-      setArr(newArr);
-      await delay(SHORT_DELAY_IN_MS);
-      list.deleteTail();
-      setDeleteFromTheTailOperation(false);
-      setArr(list.getArrWithColor());
-    }
-    setLoading(false);
-    setButtonName("");
-  };
-
-  const addByIndex = async () => {
-    if (Number(ind) < 5 && list.listLength < 6) {
-      setButtonName(ButtonName.AddByIndex);
-      setLoading(true);
-      setAddByIndexOperation(true);
-      const newArr = list.getArrWithColor();
-      for (let i = 0; i <= Number(ind); i++) {
-        setInputValueInd(i);
-        await delay(SHORT_DELAY_IN_MS);
-        if (i < Number(ind)) {
-          newArr[i].color = ElementStates.Changing;
-          setArr(newArr);
-        }
+  const handleClickAddByIndex = async () => {
+    setIsLoader({ ...isLoader, appendByIndex: true });
+    setDisabled(true);
+    list.addByIndex(inputValue, Number(inputIndex));
+    for (let i = 0; i <= Number(inputIndex); i++) {
+      listArray[i] = {
+        ...listArray[i],
+        state: ElementStates.Changing,
+        shiftElement: {
+          value: inputValue,
+          state: ElementStates.Changing,
+          position: "addAction",
+        },
+      };
+      await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+      setListArray([...listArray]);
+      if (i > 0) {
+        listArray[i - 1] = {
+          ...listArray[i - 1],
+          shiftElement: null,
+        };
       }
-      setAddByIndexOperation(false);
-      setInputValueInd(Number(""));
-      list.addByIndex(inputValue, Number(ind));
-      const finalArr = list.getArrWithColor();
-      finalArr[Number(ind)].color = ElementStates.Modified;
-
-      setArr(finalArr);
-      await delay(SHORT_DELAY_IN_MS);
-      finalArr[Number(ind)].color = ElementStates.Default;
-      setArr(finalArr);
+      setListArray([...listArray]);
     }
-    setLoading(false);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray[Number(inputIndex)] = {
+      ...listArray[Number(inputIndex)],
+      state: ElementStates.Default,
+      shiftElement: null,
+    };
+    listArray.splice(Number(inputIndex), 0, {
+      value: inputValue,
+      state: ElementStates.Modified,
+      shiftElement: null,
+    });
+    setListArray([...listArray]);
+    listArray[Number(inputIndex)].state = ElementStates.Default;
+    listArray.forEach((elem: TListArr) => {
+      elem.state = ElementStates.Default;
+    });
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    setListArray([...listArray]);
     setInputValue("");
-    setInd("");
-    setButtonName("");
+    setInputIndex("");
+    setIsLoader({ ...isLoader, appendByIndex: false });
+    setDisabled(false);
   };
 
-  const isValidIndex = (index: string): boolean => {
-    const numIndex = Number(index);
-    return numIndex >= 0 && numIndex < list.listLength;
+  const handleClickRemoveHead = async () => {
+    setIsLoader({ ...isLoader, removeHead: true });
+    setDisabled(true);
+    listArray[0] = {
+      ...listArray[0],
+      value: "",
+      shiftElement: {
+        value: listArray[0].value,
+        state: ElementStates.Changing,
+        position: "removeAction",
+      },
+    };
+    list.deleteHead();
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray.shift();
+    setListArray([...listArray]);
+    setIsLoader({ ...isLoader, removeHead: false });
+    setDisabled(false);
   };
 
-  const deleteByIndex = async () => {
-    if (Number(ind) < list.listLength && Number(ind) < 7) {
-      setButtonName(ButtonName.DeleteByIndex);
-      setLoading(true);
-      const newArr = list.getArrWithColor();
-      for (let i = 0; i <= Number(ind); i++) {
-        await delay(SHORT_DELAY_IN_MS);
-        newArr[i].color = ElementStates.Changing;
-        setArr([...newArr]);
-      }
-      await delay(SHORT_DELAY_IN_MS);
-      setCircleTempValue(newArr[Number(ind)].value);
-      newArr[Number(ind)].value = "";
-      setDeleteByIndexOperation(true);
-      newArr[Number(ind)].color = ElementStates.Default;
-      setInputValueInd(Number(ind));
-      await delay(SHORT_DELAY_IN_MS);
-      list.deleteByIndex(Number(ind));
-      setArr(list.getArrWithColor());
-      setDeleteByIndexOperation(false);
-      setLoading(false);
-      setButtonName("");
-      setInd("");
+  const handleClickRemoveTail = async () => {
+    setIsLoader({ ...isLoader, removeTail: true });
+    setDisabled(true);
+    listArray[listArray.length - 1] = {
+      ...listArray[listArray.length - 1],
+      value: "",
+      shiftElement: {
+        value: listArray[listArray.length - 1].value,
+        state: ElementStates.Changing,
+        position: "removeAction",
+      },
+    };
+    list.deleteTail();
+    setListArray([...listArray]);
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    listArray.pop();
+    setListArray([...listArray]);
+    setIsLoader({ ...isLoader, removeTail: false });
+    setDisabled(false);
+  };
+
+  const handleClickRemoveByIndex = async () => {
+    setIsLoader({ ...isLoader, removeFrom: true });
+    setDisabled(true);
+    list.deleteByIndex(Number(inputIndex));
+    for (let i = 0; i <= Number(inputIndex); i++) {
+      listArray[i] = {
+        ...listArray[i],
+        state: ElementStates.Changing,
+      };
+      await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+      setListArray([...listArray]);
     }
+    listArray[Number(inputIndex)] = {
+      ...listArray[Number(inputIndex)],
+      value: "",
+      shiftElement: {
+        value: listArray[Number(inputIndex)].value,
+        state: ElementStates.Changing,
+        position: "removeAction",
+      },
+    };
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    setListArray([...listArray]);
+    listArray.splice(Number(inputIndex), 1);
+    listArray[Number(inputIndex) - 1] = {
+      ...listArray[Number(inputIndex) - 1],
+      value: listArray[Number(inputIndex) - 1].value,
+      state: ElementStates.Modified,
+      shiftElement: null,
+    };
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    setListArray([...listArray]);
+    listArray.forEach((elem) => {
+      elem.state = ElementStates.Default;
+    });
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+    setListArray([...listArray]);
+    setIsLoader({ ...isLoader, removeFrom: false });
+    setDisabled(false);
+    setInputIndex("");
   };
-
-  const showHead = (index: number) => {
-    if (index === 0 && !addToHeadOperation && !addByIndexOperation) {
-      return "head";
-    } else if (index === 0 && addByIndexOperation && inputValueInd !== 0) {
-      return "head";
-    } else {
-      return "";
-    }
-  };
-
-  const showTail = (index: number) => {
-    if (
-      index === arr.length - 1 &&
-      !deleteFromTheTailOperation &&
-      !deleteByIndexOperation
-    ) {
-      return "tail";
-    } else if (arr.length === 1) {
-      return "";
-    } else if (deleteByIndexOperation && index === arr.length - 1) {
-      return "";
-    } else {
-      return "";
-    }
-  };
-
   return (
     <SolutionLayout title="Связный список">
-      <div className={listPageStyles.mainContainer}>
-        <div className={listPageStyles.controlContainer}>
-          <section className={listPageStyles.section}>
+      <div className={style.main}>
+        <form className={style.form}>
+          <div className={style.topSettingPanel}>
             <Input
               placeholder="Введите значение"
-              maxLength={4}
               isLimitText={true}
+              maxLength={4}
+              onChange={onChangeValue}
+              disabled={disabled}
               value={inputValue}
-              onChange={onInputChange}
-              disabled={loading}
             />
-            <div className={listPageStyles.button}>
-              <Button
-                text="Добавить в head"
-                onClick={addIntoHead}
-                isLoader={buttonName === ButtonName.AddToHead && loading}
-                disabled={inputValue === "" || loading ? true : false}
-              />
-            </div>
-            <div className={listPageStyles.button}>
-              <Button
-                text="Добавить в tail"
-                onClick={addIntoTail}
-                isLoader={buttonName === ButtonName.AddToTail && loading}
-                disabled={inputValue === "" || loading ? true : false}
-              />
-            </div>
-            <div className={listPageStyles.button}>
-              <Button
-                text="Удалить из head"
-                onClick={deleteFromTheHead}
-                isLoader={
-                  buttonName === ButtonName.DeleteFromTheHead && loading
-                }
-                disabled={loading}
-              />
-            </div>
-            <div className={listPageStyles.button}>
-              <Button
-                text="Удалить из tail"
-                onClick={deleteFromTheTail}
-                isLoader={
-                  buttonName === ButtonName.DeleteFromTheTail && loading
-                }
-                disabled={loading}
-              />
-            </div>
-          </section>
-          <section className={listPageStyles.section}>
-            <div className={listPageStyles.input}>
-              <Input
-                placeholder="Введите индекс"
-                max={5}
-                min="0"
-                type="number"
-                value={ind}
-                onChange={onIndChange}
-                disabled={loading}
-              />
-            </div>
+            <Button
+              text="Добавить в head"
+              linkedList="small"
+              onClick={handleClickAddHead}
+              isLoader={isLoader.insertInBegin}
+              disabled={!inputValue || disabled || listArray.length >= MAXINDEX}
+            />
+            <Button
+              text="Добавить в tail"
+              linkedList="small"
+              onClick={handleClickAddTail}
+              disabled={!inputValue || disabled || listArray.length >= MAXINDEX}
+              isLoader={isLoader.insertAtEnd}
+            />
+            <Button
+              text="Удалить из head"
+              linkedList="small"
+              onClick={handleClickRemoveHead}
+              isLoader={isLoader.removeHead}
+              disabled={listArray.length <= 1 || disabled}
+            />
+            <Button
+              text="Удалить из tail"
+              linkedList="small"
+              onClick={handleClickRemoveTail}
+              isLoader={isLoader.removeTail}
+              disabled={listArray.length <= 1 || disabled}
+            />
+          </div>
+          <div className={style.bottomSettingPanel}>
+            <Input
+              type="number"
+              placeholder={"Введите индекс"}
+              value={inputIndex}
+              onChange={onChangeIndex}
+              isLimitText={false}
+              maxLength={1}
+              max={MAXINDEX}
+              disabled={disabled}
+            />
             <Button
               text="Добавить по индексу"
-              onClick={addByIndex}
-              isLoader={buttonName === ButtonName.AddByIndex && loading}
+              linkedList="big"
+              onClick={handleClickAddByIndex}
+              isLoader={isLoader.appendByIndex}
               disabled={
-                !inputValue || !ind || loading || !isValidIndex(ind)
-                  ? true
-                  : false
+                !inputValue ||
+                !inputIndex ||
+                disabled ||
+                Number(inputIndex) > listArray.length - 1 ||
+                listArray.length >= MAXINDEX
               }
             />
-
             <Button
               text="Удалить по индексу"
-              onClick={deleteByIndex}
-              isLoader={buttonName === ButtonName.DeleteByIndex && loading}
+              linkedList="big"
+              onClick={handleClickRemoveByIndex}
+              isLoader={isLoader.removeFrom}
               disabled={
-                ind === "" || loading || !isValidIndex(ind) ? true : false
+                listArray.length === 0 ||
+                disabled ||
+                Number(inputIndex) > listArray.length - 1 ||
+                Number(inputIndex) < 1
               }
             />
-          </section>
-        </div>
-        <ul className={listPageStyles.circlesBox}>
-          {arr.map((item, index) => (
-            <li className={listPageStyles.circleCont} key={index}>
-              {loading === true &&
-                (addToHeadOperation === true ||
-                  addToTailOperation === true ||
-                  addByIndexOperation === true) &&
-                index === inputValueInd && (
-                  <div className={listPageStyles.smallCircleTop}>
-                    <Circle
-                      isSmall
-                      letter={inputValue}
-                      state={ElementStates.Changing}
-                    />
-                  </div>
+          </div>
+        </form>
+        <ul className={style.list} data-testid="circles">
+          {listArray.map((item, index) => {
+            return (
+              <li
+                className={style.element}
+                key={index}
+                data-testid="circleitem"
+              >
+                {item.shiftElement && (
+                  <Circle
+                    extraClass={`${style.smallCircle} ${
+                      style[`${item.shiftElement.position}`]
+                    }`}
+                    letter={item.shiftElement.value}
+                    state={item.shiftElement.state}
+                    isSmall
+                  />
                 )}
-              {loading === true &&
-                (deleteFromTheHeadOperation === true ||
-                  deleteFromTheTailOperation === true ||
-                  deleteByIndexOperation === true) &&
-                index === inputValueInd && (
-                  <div className={listPageStyles.smallCircleBottom}>
-                    <Circle
-                      isSmall
-                      letter={circleTempValue}
-                      state={ElementStates.Changing}
-                    />
-                  </div>
-                )}
-              {arr.length - 1 !== index && (
-                <div className={listPageStyles.arrow}>
-                  <ArrowIcon />
-                </div>
-              )}
-              <div className={listPageStyles.bigCircle}>
                 <Circle
-                  index={index}
-                  head={showHead(index)}
-                  tail={showTail(index)}
                   letter={item.value}
-                  state={item.color}
+                  index={index}
+                  head={index === 0 && !item.shiftElement ? "head" : ""}
+                  tail={
+                    index === listArray.length - 1 && !item.shiftElement
+                      ? "tail"
+                      : ""
+                  }
+                  isSmall={false}
+                  state={item.state}
+                  extraClass="mr-12"
                 />
-              </div>
-            </li>
-          ))}
+                {index < listArray.length - 1 && (
+                  <ArrowIcon
+                    fill={
+                      item.state !== ElementStates.Changing
+                        ? "#0032FF"
+                        : "#d252e1"
+                    }
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </SolutionLayout>

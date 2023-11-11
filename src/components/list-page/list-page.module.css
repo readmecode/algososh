@@ -1,75 +1,63 @@
-.section {
+.main {
   display: flex;
-  column-gap: 12px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.topSettingPanel {
+  display: grid;
+  grid-template-columns: 200px repeat(4, 175px);
+  gap: 11px;
+}
+
+.bottomSettingPanel {
+  display: grid;
+  grid-template-columns: 200px repeat(2, 362px);
+  gap: 10px;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  max-width: 398px;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  margin: 120px auto 0;
 }
 
 .input {
+  width: 100%;
   max-width: 204px;
-  width: 100%;
 }
 
-.mainContainer {
-  max-width: 952px;
-  width: 100%;
+.smallCircle {
+  position: absolute;
   display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  row-gap: 37px;
-}
-
-.button {
-  max-width: 175px;
-  display: flex;
-  width: 100%;
-}
-
-.circlesBox {
-  display: flex;
-  column-gap: 16px;
-  max-width: 944px;
-  width: 100%;
-  list-style-type: none;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-}
-
-.circleCont {
-  display: grid;
-  grid-template-columns: 80px 24px;
-  grid-template-rows: 56px 80px 56px;
-  row-gap: 8px;
-  column-gap: 16px;
   align-items: center;
-  justify-items: center;
 }
 
-.arrow {
-  grid-row-start: 2;
-  grid-row-end: 3;
-  grid-column-start: 2;
-  grid-column-end: 3;
+.element {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.smallCircleTop {
-  grid-row-start: 1;
-  grid-row-end: 2;
-  grid-column-start: 1;
-  grid-column-end: 2;
+.addAction {
+  top: -64px;
+  left: 14px;
 }
 
-.smallCircleBottom {
-  padding-top: 60px;
-  grid-row-start: 3;
-  grid-row-end: 4;
-  grid-column-start: 1;
-  grid-column-end: 2;
-}
-
-.bigCircle {
-  grid-row-start: 2;
-  grid-row-end: 3;
-  grid-column-start: 1;
-  grid-column-end: 2;
+.removeAction {
+  bottom: -92px;
+  left: 10px;
 }
