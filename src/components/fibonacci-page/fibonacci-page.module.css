@@ -1,36 +1,18 @@
-.mainContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-    align-items: center;
+.form {
+  width: 500px;
+  gap: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: auto;
 }
 
-.inputContainer {
-    max-width: 567px;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-}
-
-.input {
-    max-width: 377px;
-    width: 100%;
-}
-
-.button {
-    display: flex;
-    width: 178px;
-}
-
-.circlesBox {
-    display: flex;
-    column-gap: 16px;
-    row-gap: 78px;
-    padding: 0;
-    margin: 0;
-    max-width: 944px;
-    width: 100%;
-    flex-wrap: wrap;
-    list-style-type: none;
+.letterList {
+  list-style: none;
+  margin: 50px auto 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 80px);
+  justify-content: center;
+  grid-gap: 40px 30px;
+  max-width: 900px;
 }

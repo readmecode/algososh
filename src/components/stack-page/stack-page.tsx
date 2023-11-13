@@ -1,111 +1,118 @@
-import React, { ChangeEvent, useState } from "react";
-import { ElementStates } from "../../types/element-states";
+import style from "./stack-page.module.css";
+import React, { useState } from "react";
+import { SolutionLayout } from "../ui/solution-layout/solution-layout";
+import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
 import { Circle } from "../ui/circle/circle";
-import { Input } from "../ui/input/input";
-import { SolutionLayout } from "../ui/solution-layout/solution-layout";
-import stackPageStyles from "./stack-page.module.css";
+import { Stack } from "./stack";
+import { ElementStates } from "../../types/element-states";
 import { SHORT_DELAY_IN_MS } from "../../constants/delays";
-import { Stack } from "./classes";
-import { delay } from "../../utils/utils";
 
-type TStackItem = {
-  value: string;
-  color: ElementStates;
+type TItem = {
+  value?: string;
+  color?: ElementStates;
 };
+const stack = new Stack<string>();
 
 export const StackPage: React.FC = () => {
-  const [stackArr, setStackArr] = useState<TStackItem[]>([]);
-  const [inputValue, setInputValue] = useState("");
+  const [input, setInput] = useState("");
+  const [array, setArray] = useState<TItem[]>([]);
+  const [controls, setControls] = useState({
+    add: false,
+    delete: false,
+    clear: false,
+  });
 
-  const [stack] = useState(new Stack<TStackItem>());
-
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+  const onChangeInput = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(evt.target.value);
   };
 
-  const handleAddButton = async () => {
-    if (inputValue) {
-      stack.push({ value: inputValue, color: ElementStates.Changing });
-      setInputValue("");
-      setStackArr([...stack.getElements()]);
-      await delay(SHORT_DELAY_IN_MS);
-      stack.peek.color = ElementStates.Default;
-      setStackArr([...stack.getElements()]);
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (Number(input)) {
+      setControls({ ...controls, add: true });
+      stack.push(input);
+      setArray([
+        ...array,
+        { value: stack.peak()!, color: ElementStates.Changing },
+      ]);
+      setInput("");
+
+      await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+
+      setArray([
+        ...array,
+        { value: stack.peak()!, color: ElementStates.Default },
+      ]);
+      setControls({ ...controls, add: false });
     }
   };
 
-  const handleDeleteButton = async () => {
-    stack.peek.color = ElementStates.Changing;
-    setStackArr([...stack.getElements()]);
-    await delay(SHORT_DELAY_IN_MS);
+  const deleteLast = async () => {
+    setControls({ ...controls, delete: true });
+    array.at(-1)!.color = ElementStates.Changing;
+    setArray([...array]);
+
+    await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
     stack.pop();
-    setStackArr([...stack.getElements()]);
+    array.pop();
+    if (array.length > 0) array.at(-1)!.color = ElementStates.Default;
+    setArray([...array]);
+    setControls({ ...controls, delete: false });
   };
 
-  const handleRemoveAllButton = () => {
+  const deleteALL = () => {
     stack.clear();
-    setStackArr([...stack.getElements()]);
-  };
-
-  const givePosition = (index: number, arr: TStackItem[]): string => {
-    if (index === arr.length - 1) {
-      return "top";
-    } else {
-      return "";
-    }
+    setArray([]);
   };
 
   return (
     <SolutionLayout title="Стек">
-      <div className={stackPageStyles.mainContainer}>
-        <div className={stackPageStyles.inputContainer}>
-          <section className={stackPageStyles.inputSection}>
-            <div className={stackPageStyles.input}>
-              <Input
-                maxLength={4}
-                isLimitText={true}
-                type="text"
-                value={inputValue}
-                onChange={onChange}
-              />
-            </div>
-            <div className={stackPageStyles.addButton}>
-              <Button
-                text="Добавить"
-                onClick={handleAddButton}
-                disabled={inputValue === ""}
-              />
-            </div>
-            <div className={stackPageStyles.deleteButton}>
-              <Button
-                text="Удалить"
-                onClick={handleDeleteButton}
-                disabled={!stackArr.length}
-              />
-            </div>
-          </section>
-          <div className={stackPageStyles.button}>
+      <div className={style.main}>
+        <form className={style.form} onSubmit={submit}>
+          <Input
+            maxLength={4}
+            isLimitText={true}
+            value={input}
+            onChange={onChangeInput}
+          />
+          <Button
+            type="submit"
+            text="Добавить"
+            isLoader={controls.add}
+            disabled={!input || controls.delete || controls.clear}
+          />
+          <Button
+            type={"button"}
+            data-testid="button-delete"
+            text="Удалить"
+            isLoader={controls.delete}
+            disabled={array.length === 0 || controls.add || controls.clear}
+            onClick={deleteLast}
+          />
+          <div className={style.separate}>
             <Button
+              type={"reset"}
               text="Очистить"
-              onClick={handleRemoveAllButton}
-              disabled={!stackArr.length}
+              onClick={deleteALL}
+              isLoader={controls.clear}
+              disabled={array.length === 0 || controls.delete || controls.add}
             />
           </div>
+        </form>
+        <div className={style.numberList}>
+          {array?.map((item, index) => (
+            <li key={index}>
+              <Circle
+                letter={item.value}
+                state={item.color}
+                head={stack.tail === index + 1 ? "top" : null}
+                index={index}
+              />
+            </li>
+          ))}
         </div>
-        <ul className={stackPageStyles.circlesBox}>
-          {stackArr &&
-            stackArr.map((item, index) => (
-              <li key={index}>
-                <Circle
-                  letter={item.value}
-                  state={item.color}
-                  index={index}
-                  head={givePosition(index, stackArr)}
-                />
-              </li>
-            ))}
-        </ul>
       </div>
     </SolutionLayout>
   );

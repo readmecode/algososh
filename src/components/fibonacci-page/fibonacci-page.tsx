@@ -1,85 +1,75 @@
+import style from "./fibonacci-page.module.css";
+import React, { useState } from "react";
 import { SolutionLayout } from "../ui/solution-layout/solution-layout";
-import React, { ChangeEvent, useState } from "react";
 import { Input } from "../ui/input/input";
 import { Button } from "../ui/button/button";
-import fibonacciPageStyles from "./fibonacci-page.module.css";
 import { Circle } from "../ui/circle/circle";
 import { SHORT_DELAY_IN_MS } from "../../constants/delays";
-import { getFibonacciNumbers } from "./fibonacci-page.utils";
-import { delay } from "../../utils/utils";
+import { ElementStates } from "../../types/element-states";
 
 export const FibonacciPage: React.FC = () => {
-  const [inputValue, setInputValue] = useState<string>();
+  const [input, setInput] = useState("");
   const [loader, setLoader] = useState(false);
-  const [buttonDisabled, setButtonDisabled] = useState(true);
-  const [arrItemFibonacci, setArrItemFibonacci] = useState<Array<number>>();
+  const [array, setArray] = useState<Array<string | number>>([]);
 
-  const showVisualization = async (inputValue: string) => {
+  const onChangeInput = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (!(Number(evt.target.value) < 0) && Number(evt.target.value) % 1 == 0) {
+      setInput(evt.target.value);
+    }
+  };
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    let prev = 0;
+    let next = 1;
+    let tempArr: Array<string | number> = [];
+
     setLoader(true);
-    const arr = getFibonacciNumbers(Number(inputValue));
-    for (let i = 0; i < arr.length; i++) {
-      await delay(SHORT_DELAY_IN_MS);
-      setArrItemFibonacci(arr.slice(0, i + 1));
+    for (let i = 0; i <= Number(input); i++) {
+      await new Promise((resolve) => setTimeout(resolve, SHORT_DELAY_IN_MS));
+
+      let temp = next;
+      next = prev + next;
+      prev = temp;
+      tempArr = [...tempArr, prev];
+
+      setArray(tempArr);
     }
     setLoader(false);
   };
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const arrFromInput = e.target.value.split("");
-
-    if (arrFromInput.length > 2 || Number(arrFromInput[0]) === 0) {
-      setButtonDisabled(true);
-    } else if (Number(arrFromInput[0]) >= 2 && arrFromInput.length === 2) {
-      setButtonDisabled(true);
-    } else {
-      setInputValue(e.target.value);
-      setButtonDisabled(false);
-      if (e.target.value === "") {
-        setButtonDisabled(true);
-      }
-    }
-  };
-
-  const handleButton = () => {
-    if (inputValue) showVisualization(inputValue);
-  };
-
-  const justifyStyle =
-    arrItemFibonacci && arrItemFibonacci.length < 10
-      ? { justifyContent: "center" }
-      : { justifyContent: "flex-start" };
-
   return (
     <SolutionLayout title="Последовательность Фибоначчи">
-      <div className={fibonacciPageStyles.mainContainer}>
-        <div className={fibonacciPageStyles.inputContainer}>
-          <div className={fibonacciPageStyles.input}>
-            <Input
-              max={19}
-              isLimitText={true}
-              type="number"
-              min={1}
-              onChange={onChange}
-            />
-          </div>
-          <div className={fibonacciPageStyles.button}>
-            <Button
-              text="Рассчитать"
-              onClick={handleButton}
-              disabled={buttonDisabled}
-              isLoader={loader}
-            />
-          </div>
+      <div>
+        <form className={style.form} onSubmit={submit}>
+          <Input
+            max={19}
+            isLimitText={true}
+            value={input}
+            onChange={onChangeInput}
+            type={"number"}
+          />
+          <Button
+            type="submit"
+            text="Рассчитать"
+            isLoader={loader}
+            disabled={
+              Number(input) < 0 || Number(input) > 19 || Number(input) === 0
+            }
+          />
+        </form>
+        <div className={style.letterList}>
+          {array?.map((item, index) => (
+            <li key={index}>
+              <Circle
+                letter={String(item)}
+                state={ElementStates.Default}
+                index={index}
+              />
+            </li>
+          ))}
         </div>
-        {arrItemFibonacci?.length && (
-          <ul className={fibonacciPageStyles.circlesBox} style={justifyStyle}>
-            {arrItemFibonacci.map((item, i) => (
-              <li key={i}>
-                <Circle index={i} letter={item.toString()} />
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </SolutionLayout>
   );
